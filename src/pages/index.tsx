@@ -1,8 +1,10 @@
-import type { NextPage } from "next";
+import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { trpc } from "../utils/trpc";
 
-const Home: NextPage = () => {
+const Home: NextPage<Props> = (props) => {
+  console.log({ props });
+
   const hello = trpc.useQuery(["example.hello", { text: "from tRPC" }]);
 
   return (
@@ -14,7 +16,8 @@ const Home: NextPage = () => {
       </Head>
 
       <main className="container mx-auto flex flex-col items-center justify-center min-h-screen p-4">
-        <h1 className="text-5xl md:text-[5rem] leading-normal font-extrabold text-gray-700">
+        <Regions regions={props.regions} />
+        {/* <h1 className="text-5xl md:text-[5rem] leading-normal font-extrabold text-gray-700">
           Create <span className="text-purple-300">T3</span> App
         </h1>
         <p className="text-2xl text-gray-700">This stack uses:</p>
@@ -49,7 +52,7 @@ const Home: NextPage = () => {
             description="Build data-driven JavaScript & TypeScript apps in less time"
             documentation="https://www.prisma.io/docs/"
           />
-        </div>
+        </div> */}
         <div className="pt-6 text-2xl text-blue-500 flex justify-center items-center w-full">
           {hello.data ? <p>{hello.data.greeting}</p> : <p>Loading..</p>}
         </div>
@@ -86,3 +89,44 @@ const TechnologyCard = ({
     </section>
   );
 };
+
+import { EC2Client, DescribeRegionsCommand, Region } from "@aws-sdk/client-ec2";
+
+interface Props {
+  regions: Region[];
+}
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const c = new EC2Client({});
+  const r = await c.send(new DescribeRegionsCommand({}));
+  if (r.$metadata.httpStatusCode !== 200) {
+    throw new Error(`failed to describe-regions.`);
+  }
+  if (!r.Regions) {
+    return { props: { regions: [] } };
+  }
+  // console.log({ r });
+
+  const props: Props = {
+    regions: r.Regions,
+  };
+  return {
+    props,
+  };
+};
+
+function Regions({ regions }: Props) {
+  return (
+    <>
+      <table>
+        {regions.map((r) => (
+          <tr key={r.Endpoint}>
+            <td>{r.RegionName}</td>
+            <td>{r.Endpoint}</td>
+            <td>{r.OptInStatus}</td>
+          </tr>
+        ))}
+      </table>
+    </>
+  );
+}
