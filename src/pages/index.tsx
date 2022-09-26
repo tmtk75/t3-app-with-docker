@@ -3,8 +3,7 @@ import Head from "next/head";
 import { trpc } from "../utils/trpc";
 
 const Home: NextPage<Props> = (props) => {
-  console.log({ props });
-
+  // console.log({ props });
   const hello = trpc.useQuery(["example.hello", { text: "from tRPC" }]);
 
   return (
@@ -91,6 +90,7 @@ const TechnologyCard = ({
 };
 
 import { EC2Client, DescribeRegionsCommand, Region } from "@aws-sdk/client-ec2";
+import { useEffect, useState } from "react";
 
 interface Props {
   regions: Region[];
@@ -103,7 +103,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     throw new Error(`failed to describe-regions.`);
   }
   if (!r.Regions) {
-    return { props: { regions: [] } };
+    throw new Error(`unexpect Regions is missing.`);
   }
   // console.log({ r });
 
@@ -116,16 +116,20 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 };
 
 function Regions({ regions }: Props) {
+  const [_regions, setRegions] = useState<Props["regions"]>([]);
+  useEffect(() => setRegions(regions), [regions]);
   return (
     <>
       <table>
-        {regions.map((r) => (
-          <tr key={r.Endpoint}>
-            <td>{r.RegionName}</td>
-            <td>{r.Endpoint}</td>
-            <td>{r.OptInStatus}</td>
-          </tr>
-        ))}
+        <tbody>
+          {_regions.map((r) => (
+            <tr key={r.Endpoint}>
+              <td>{r.RegionName}</td>
+              <td>{r.Endpoint}</td>
+              <td>{r.OptInStatus}</td>
+            </tr>
+          ))}
+        </tbody>
       </table>
     </>
   );
