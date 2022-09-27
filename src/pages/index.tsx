@@ -16,7 +16,7 @@ const Home: NextPage<Props> = (props) => {
 
       <main className="container mx-auto flex flex-col items-center justify-center min-h-screen p-4">
         <h1>AWS regions</h1>
-        <Regions regions={props.regions} />
+        <S3Buckets buckets={props.buckets} />
         {/* <h1 className="text-5xl md:text-[5rem] leading-normal font-extrabold text-gray-700">
           Create <span className="text-purple-300">T3</span> App
         </h1>
@@ -90,44 +90,51 @@ const TechnologyCard = ({
   );
 };
 
-import { DescribeRegionsCommand, EC2Client, Region } from "@aws-sdk/client-ec2";
+import { S3Client, ListBucketsCommand } from "@aws-sdk/client-s3";
 import { useEffect, useState } from "react";
 
+interface Bucket {
+  name?: string;
+  creationDate?: string;
+}
+
 interface Props {
-  regions: Region[];
+  buckets: Bucket[];
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const c = new EC2Client({});
-  const r = await c.send(new DescribeRegionsCommand({}));
+  const c = new S3Client({});
+  const r = await c.send(new ListBucketsCommand({}));
   if (r.$metadata.httpStatusCode !== 200) {
-    throw new Error(`failed to describe-regions.`);
+    throw new Error(`failed to list-buckets.`);
   }
-  if (!r.Regions) {
+  if (!r.Buckets) {
     throw new Error(`unexpect Regions is missing.`);
   }
   // console.log({ r });
 
   const props: Props = {
-    regions: r.Regions,
+    buckets: r.Buckets.map((e) => ({
+      name: e.Name,
+      creationDate: e.CreationDate?.toISOString(),
+    })),
   };
   return {
     props,
   };
 };
 
-function Regions({ regions }: Props) {
-  const [_regions, setRegions] = useState<Props["regions"]>([]);
-  useEffect(() => setRegions(regions), [regions]);
+function S3Buckets({ buckets }: Props) {
+  const [_buckets, setBuckets] = useState<Props["buckets"]>([]);
+  useEffect(() => setBuckets(buckets), [buckets]);
   return (
     <>
       <table>
         <tbody>
-          {_regions.map((r) => (
-            <tr key={r.Endpoint}>
-              <td>{r.RegionName}</td>
-              <td>{r.Endpoint}</td>
-              <td>{r.OptInStatus}</td>
+          {_buckets.slice(0, 5).map((r) => (
+            <tr key={r.name}>
+              <td>{r.name}</td>
+              <td>{r.creationDate}</td>
             </tr>
           ))}
         </tbody>

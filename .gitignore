@@ -11,6 +11,7 @@
 # database
 /prisma/db.sqlite
 /prisma/db.sqlite-journal
+/prisma/migrations
 
 # next.js
 /.next/
@@ -45,3 +46,6 @@ yarn-error.log*
 # docker compose
 ## postgres
 pgdata
+## localstack
+volume
+
