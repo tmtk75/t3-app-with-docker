@@ -38,3 +38,10 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# vim
+.*.swp
+
+# docker compose
+## postgres
+pgdata
