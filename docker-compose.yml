@@ -7,11 +7,15 @@ services:
       - postgres
       - localstack
     ports:
-      - "3002:3000"
+      - "3000:3000"
     environment:
-      DATABASE_URL: "postgresql://admin:abc123@postgres:5432/example"
+      DATABASE_URL: postgresql://admin:abc123@postgres:5432/example
+      AWS_ACCESS_KEY_ID: whatever
+      AWS_SECRET_ACCESS_KEY: whatever
+      AWS_REGION: ap-northeast-1
 
   postgres:
+    container_name: postgres
     image: postgres:14-alpine
     environment:
       POSTGRES_USER: "admin"
@@ -32,14 +36,15 @@ services:
       - "127.0.0.1:53:53"                # DNS config (only required for Pro)
       - "127.0.0.1:53:53/udp"            # DNS config (only required for Pro)
       - "127.0.0.1:443:443"              # LocalStack HTTPS Gateway (only required for Pro)
+    # https://docs.localstack.cloud/localstack/configuration/
     environment:
       - DEBUG=${DEBUG-}
       - PERSISTENCE=${PERSISTENCE-}
       - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR-}
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY-}  # only required for Pro
       - DOCKER_HOST=unix:///var/run/docker.sock
-      #- SERVICES=sqs,s3,dynamodb,elasticache,rds
-      - SERVICES=ec2
+      #- SERVICES=sqs,s3,dynamodb,elasticache,rds # deprecated
+      - DEFAULT_REGION=ap-northeast-1
 
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"

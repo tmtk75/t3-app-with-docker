@@ -15,7 +15,6 @@ const Home: NextPage<Props> = (props) => {
       </Head>
 
       <main className="container mx-auto flex flex-col items-center justify-center min-h-screen p-4">
-        <h1>AWS regions</h1>
         <S3Buckets buckets={props.buckets} />
         {/* <h1 className="text-5xl md:text-[5rem] leading-normal font-extrabold text-gray-700">
           Create <span className="text-purple-300">T3</span> App
@@ -103,7 +102,7 @@ interface Props {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const c = new S3Client({});
+  const c = new S3Client({ endpoint: process.env.AWS_ENDPOINT });
   const r = await c.send(new ListBucketsCommand({}));
   if (r.$metadata.httpStatusCode !== 200) {
     throw new Error(`failed to list-buckets.`);
@@ -127,8 +126,24 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 function S3Buckets({ buckets }: Props) {
   const [_buckets, setBuckets] = useState<Props["buckets"]>([]);
   useEffect(() => setBuckets(buckets), [buckets]);
+  if (_buckets.length === 0) {
+    return (
+      <>
+        No s3 buckets.
+        Please create a new s3 bucket.
+
+        Use this command if you use localstack.
+        <div>
+          aws --region ap-northeast-1 --endpoint-url=http://localhost:4566 s3api
+          create-bucket --bucket my-1st-bucket --create-bucket-configuration
+          LocationConstraint=ap-northeast-1
+        </div>
+      </>
+    );
+  }
   return (
     <>
+      <h1>s3 buckets</h1>
       <table>
         <tbody>
           {_buckets.slice(0, 5).map((r) => (
@@ -142,3 +157,6 @@ function S3Buckets({ buckets }: Props) {
     </>
   );
 }
+
+console.debug(`DATABASE_URL:`, process.env.DATABASE_URL);
+console.debug(`NEXTAUTH_URL:`, process.env.NEXTAUTH_URL);
